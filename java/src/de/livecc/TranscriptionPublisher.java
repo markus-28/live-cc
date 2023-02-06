@@ -22,10 +22,9 @@ public class TranscriptionPublisher {
     /**
      * A StreamingRecognitionResult object is given because some Subscribers dependent
      * on the "is_final" flag.
-     * @param transcription Concrete Response by the Google Speech API.
+     * @param transcription Concrete Response by an API.
      */
     public void publishMessage(StreamingRecognitionResult transcription) {
-//        String transcriptionString = transcription.getAlternativesList().get(0).getTranscript();
         subscribers.forEach(subscriber -> subscriber.receive(transcription));
     }
 }

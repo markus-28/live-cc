@@ -1,4 +1,4 @@
-package de.livecc;
+package de.livecc.contentprovider;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;

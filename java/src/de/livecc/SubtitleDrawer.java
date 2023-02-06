@@ -10,13 +10,15 @@ import java.awt.*;
  */
 public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
 
-    private static final int MAX_CAPACITY = 200;
-    private static final int MAX_BLOCK_LENGTH = 90;
+    private static final int MAX_CAPACITY = 500;
     private static final Dimension SCREEN_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
 
     private JLabel textBlockLower;
     private JLabel textBlockUpper;
     private JFrame jFrame;
+
+    private final Font font = new Font("Arial", Font.PLAIN, 30);
+    private FontMetrics fontMetrics;
 
     private final TranscriptionPublisher transcriptionPublisher;
 
@@ -28,37 +30,47 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
 
     public SubtitleDrawer(TranscriptionPublisher publisher) {
         transcriptionPublisher = publisher;
-        setupJFrameAndText();
+
+        setupGraphics();
     }
 
-    private void setupJFrameAndText() {
-        textBlockUpper = new JLabel(upperSubtitleBlock, SwingConstants.LEADING);
-        textBlockUpper.setLayout(null);
-        textBlockUpper.setVisible(true);
-        textBlockUpper.setFont(new Font("Arial", Font.PLAIN, 30));
-        textBlockUpper.setBackground(Color.GREEN);
-        textBlockUpper.setOpaque(true);
-
-        textBlockLower = new JLabel(lowerSubtitleBlock);
-        textBlockLower.setLayout(null);
-        textBlockLower.setVisible(true);
-        textBlockLower.setFont(new Font("Arial", Font.PLAIN, 30));
-        textBlockLower.setBackground(Color.GREEN);
-        textBlockLower.setOpaque(true);
-
-        JPanel subtitlePanel = new JPanel();
-        subtitlePanel.add(textBlockUpper);
-        subtitlePanel.add(textBlockLower);
-        subtitlePanel.setLayout(new BoxLayout(subtitlePanel, BoxLayout.Y_AXIS));
-        subtitlePanel.setBackground(Color.CYAN);
-        subtitlePanel.setOpaque(true);
-
+    private void setupGraphics() {
         jFrame = new JFrame("window");
-        jFrame.getContentPane().add(subtitlePanel, BorderLayout.SOUTH);
         jFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         jFrame.getContentPane().setBackground(Color.RED);
         jFrame.setUndecorated(true);
         jFrame.setVisible(true);
+
+        JPanel subtitlePanel = new JPanel();
+        subtitlePanel.setLayout(new BoxLayout(subtitlePanel, BoxLayout.Y_AXIS));
+        subtitlePanel.setBackground(Color.CYAN);
+        subtitlePanel.setOpaque(true);
+
+        jFrame.getContentPane().add(subtitlePanel, BorderLayout.SOUTH);
+
+        Graphics graphics = jFrame.getGraphics();
+        fontMetrics = graphics.getFontMetrics(font);
+        int fontHeight = fontMetrics.getHeight();
+        Dimension preferredJLabelSize = new Dimension(SCREEN_SIZE.width, fontHeight);
+
+        textBlockUpper = new JLabel(upperSubtitleBlock);
+        textBlockUpper.setLayout(null);
+        textBlockUpper.setVisible(true);
+        textBlockUpper.setFont(font);
+        textBlockUpper.setBackground(Color.GREEN);
+        textBlockUpper.setOpaque(true);
+        textBlockUpper.setPreferredSize(preferredJLabelSize);
+
+        textBlockLower = new JLabel(lowerSubtitleBlock);
+        textBlockLower.setLayout(null);
+        textBlockLower.setVisible(true);
+        textBlockLower.setFont(font);
+        textBlockLower.setBackground(Color.GREEN);
+        textBlockLower.setOpaque(true);
+        textBlockLower.setPreferredSize(preferredJLabelSize);
+
+        subtitlePanel.add(textBlockUpper);
+        subtitlePanel.add(textBlockLower);
     }
 
     @Override
@@ -84,22 +96,16 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
         updateSubtitles();
     }
 
-    /**
-     * Is called from another thread to update content for subtitle display.
-     * The subtitles appear in 2 rows so that they are easier to read.
-     */
     private void makeSubtitleBoxes(String subtitles) {
         String[] toDisplayList = subtitles.split(match);
         String toDisplay = toDisplayList[toDisplayList.length - 1];
 
         upperSubtitleBlock = buildSublist(toDisplay);
-
         for(int i = 0; i < upperSubtitleBlock.length() - 1; i++) {
             toDisplay = toDisplay.substring(1);
         }
 
         lowerSubtitleBlock = buildSublist(toDisplay);
-
         for(int i = 0; i < lowerSubtitleBlock.length() - 1; i++) {
             toDisplay = toDisplay.substring(1);
         }
@@ -114,14 +120,20 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
         String block = "";
         String[] word_list = input_string.split(" ");
         for (String word : word_list) {
-            if (block.length() + word.length() >= MAX_BLOCK_LENGTH)
+            String potentialNewBlock = block + word + " ";
+            int newBlockLength = fontMetrics.stringWidth(potentialNewBlock);
+
+            if (newBlockLength >= SCREEN_SIZE.width)
                 break;
-            block = block + word + " ";
+
+            block = potentialNewBlock;
         }
         return block;
     }
 
     private void updateSubtitles() {
+        upperSubtitleBlock = upperSubtitleBlock.strip();
+        lowerSubtitleBlock = lowerSubtitleBlock.strip();
         textBlockUpper.setText(upperSubtitleBlock);
         textBlockLower.setText(lowerSubtitleBlock);
     }

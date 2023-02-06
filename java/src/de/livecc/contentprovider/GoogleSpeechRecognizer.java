@@ -1,4 +1,4 @@
-package de.livecc;
+package de.livecc.contentprovider;
 
 import com.google.api.gax.rpc.ClientStream;
 import com.google.api.gax.rpc.ResponseObserver;
@@ -10,7 +10,9 @@ import com.google.cloud.speech.v1.StreamingRecognitionConfig;
 import com.google.cloud.speech.v1.StreamingRecognitionResult;
 import com.google.cloud.speech.v1.StreamingRecognizeRequest;
 import com.google.cloud.speech.v1.StreamingRecognizeResponse;
+
 import com.google.protobuf.ByteString;
+import de.livecc.TranscriptionPublisher;
 
 import java.io.IOException;
 
