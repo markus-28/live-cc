@@ -80,16 +80,20 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
 
     @Override
     public void receive(StreamingRecognitionResult transcription) {
-        String transcriptionString = transcription.getAlternatives(0).getTranscript(); //.strip();
+        String transcriptionString = transcription.getAlternatives(0).getTranscript();
         boolean isFinal = transcription.getIsFinal();
 
-        String subtitlesToDraw = mostRecentSubtitleStorage;
+        String subtitlesToDraw = mostRecentSubtitleStorage + transcriptionString;
+
         if(isFinal) {
-            mostRecentSubtitleStorage += transcriptionString;
+            mostRecentSubtitleStorage = mostRecentSubtitleStorage + transcriptionString;
+
+            int storageLength = mostRecentSubtitleStorage.length();
+            if(storageLength > MAX_CAPACITY) {
+                mostRecentSubtitleStorage = mostRecentSubtitleStorage.substring(storageLength - MAX_CAPACITY);
+            }
+
             subtitlesToDraw = mostRecentSubtitleStorage;
-        }
-        else {
-            subtitlesToDraw += transcriptionString;
         }
 
         makeSubtitleBoxes(subtitlesToDraw);

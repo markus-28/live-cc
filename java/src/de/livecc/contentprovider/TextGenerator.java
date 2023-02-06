@@ -32,6 +32,8 @@ public class TextGenerator implements Runnable {
             "Doch aus Angst, noch weiter in die Verderblichkeit gezogen zu werden, lehnt Gretchen Fausts Hilfe ab. " +
             "Sie wendet sich Gott zu, und wird von ihren Sünden erlöst.";
 
+    private StringBuilder currentSentence = new StringBuilder();
+
 
     public TextGenerator(TranscriptionPublisher publisher) {
         this.transcriptionPublisher = publisher;
@@ -44,16 +46,14 @@ public class TextGenerator implements Runnable {
 
     private void startGeneratingText() {
         String[] sentences = exampleString.split(" ");
-        StringBuilder sentence = new StringBuilder("");
-
         for(String word : sentences) {
-            sendMockUpTranscription(sentence, word);
+            sendMockUpTranscription(word);
         }
     }
 
-    private void sendMockUpTranscription(StringBuilder sentence, String word) {
+    private void sendMockUpTranscription(String word) {
 
-        StreamingRecognitionResult result = buildMockUpResult(sentence, word);
+        StreamingRecognitionResult result = buildMockUpResult(word);
         transcriptionPublisher.publishMessage(result);
 
         try {
@@ -63,25 +63,26 @@ public class TextGenerator implements Runnable {
         }
     }
 
-    private StreamingRecognitionResult buildMockUpResult(StringBuilder sentence, String word) {
-        sentence.append(" ").append(word);
+    private StreamingRecognitionResult buildMockUpResult(String word) {
+        currentSentence.append(" ").append(word);
 
         StreamingRecognizeResponse mockUpTranscription;
         if(word.charAt(word.length() - 1) == '.') {
             mockUpTranscription = StreamingRecognizeResponse.newBuilder()
                     .addResults(StreamingRecognitionResult.newBuilder()
                             .addAlternatives(SpeechRecognitionAlternative.newBuilder()
-                                    .setTranscript(sentence.toString())
+                                    .setTranscript(currentSentence.toString())
                                     .build())
                             .setIsFinal(true)
                             .build())
                     .build();
+            currentSentence.setLength(0); // clearing StringBuilder as this transcript is final.
         }
         else {
             mockUpTranscription = StreamingRecognizeResponse.newBuilder()
                     .addResults(StreamingRecognitionResult.newBuilder()
                             .addAlternatives(SpeechRecognitionAlternative.newBuilder()
-                                    .setTranscript(sentence.toString())
+                                    .setTranscript(currentSentence.toString())
                                     .build())
                             .build())
                     .build();
