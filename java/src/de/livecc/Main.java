@@ -1,8 +1,7 @@
 package de.livecc;
 
-import de.livecc.contentprovider.GoogleSpeechRecognizer;
-import de.livecc.contentprovider.MicrophoneStream;
 import de.livecc.contentprovider.TextGenerator;
+import de.livecc.contentprovider.MicrophoneStream;
 
 public class Main {
 
