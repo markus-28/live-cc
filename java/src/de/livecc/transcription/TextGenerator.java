@@ -11,9 +11,7 @@ import de.livecc.TranscriptionPublisher;
  */
 public class TextGenerator implements Runnable {
 
-    private final TranscriptionPublisher transcriptionPublisher;
-
-    private final String exampleString = "An einem trüben Tag auf freiem Feld erfährt Faust, dass Gretchen in ihrer Verzweiflung ihr neugeborenes " +
+    private static final String goetheFaustString = "An einem trüben Tag auf freiem Feld erfährt Faust, dass Gretchen in ihrer Verzweiflung ihr neugeborenes " +
             "Kind ertränkt hat. Sie ist zum Tode verurteilt und wartet im Kerker auf ihre Hinrichtung. Eine Rückkehr " +
             "in die Stadt birgt Gefahren, dennoch will Faust Gretchen retten. Er macht Mephisto für das Unglück verantwortlich " +
             "und verlangt, dass er ihm bei der Befreiung helfe. Mephisto weist jegliche Schuld von sich. Schließlich " +
@@ -32,8 +30,9 @@ public class TextGenerator implements Runnable {
             "Doch aus Angst, noch weiter in die Verderblichkeit gezogen zu werden, lehnt Gretchen Fausts Hilfe ab. " +
             "Sie wendet sich Gott zu, und wird von ihren Sünden erlöst.";
 
-    private StringBuilder currentSentence = new StringBuilder();
+    private final StringBuilder currentSentence = new StringBuilder();
 
+    private final TranscriptionPublisher transcriptionPublisher;
 
     public TextGenerator(TranscriptionPublisher publisher) {
         this.transcriptionPublisher = publisher;
@@ -45,7 +44,7 @@ public class TextGenerator implements Runnable {
     }
 
     private void startGeneratingText() {
-        String[] sentences = exampleString.split(" ");
+        String[] sentences = goetheFaustString.split(" ");
         for(String word : sentences) {
             sendMockUpTranscription(word);
         }

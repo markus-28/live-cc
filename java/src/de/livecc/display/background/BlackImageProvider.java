@@ -1,7 +1,10 @@
 package de.livecc.display.background;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.WritableRaster;
 
 /**
  * Provides a black image.
@@ -21,6 +24,10 @@ public class BlackImageProvider implements ImageStrategy {
 
     @Override
     public synchronized BufferedImage provideImage() {
-        return blackImage; // TODO object is mutable
+        ColorModel colorModel = blackImage.getColorModel();
+        boolean isAlphaPremultiplied = colorModel.isAlphaPremultiplied();
+        WritableRaster raster = blackImage.copyData(null);
+
+        return new BufferedImage(colorModel, raster, isAlphaPremultiplied, null);
     }
 }

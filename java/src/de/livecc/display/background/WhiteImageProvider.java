@@ -1,7 +1,10 @@
 package de.livecc.display.background;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.WritableRaster;
 
 /**
  * Provides a white image.
@@ -21,6 +24,10 @@ public class WhiteImageProvider implements ImageStrategy {
 
     @Override
     public BufferedImage provideImage() {
-        return whiteImage; // TODO object is mutable
+        ColorModel colorModel = whiteImage.getColorModel();
+        boolean isAlphaPremultiplied = colorModel.isAlphaPremultiplied();
+        WritableRaster raster = whiteImage.copyData(null);
+
+        return new BufferedImage(colorModel, raster, isAlphaPremultiplied, null);
     }
 }

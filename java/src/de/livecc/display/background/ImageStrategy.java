@@ -10,6 +10,7 @@ public interface ImageStrategy {
     /**
      * Provides an Image.
      * A concrete implementation is thread safe.
+     *
      * @return An ImageIcon.
      */
     BufferedImage provideImage();
