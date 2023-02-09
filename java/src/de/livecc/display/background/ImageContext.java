@@ -19,16 +19,22 @@ public class ImageContext {
      * @param strategy an ImageStrategy.
      */
     public ImageContext(ImageStrategy strategy) {
+        if(strategy == null)
+            throw new NullPointerException();
+
         imageStrategy = strategy;
     }
 
     /**
-     * Chooses a default ImageStrategy.
+     * Chooses BlackImageProvider as default ImageStrategy.
      *
      * @param screenWidth Width of screen.
      * @param screenHeight Height of screen.
      */
     public ImageContext(int screenWidth, int screenHeight) {
+        if(screenWidth <= 0 || screenHeight <= 0)
+            throw new IllegalArgumentException();
+
         imageStrategy = new BlackImageProvider(screenWidth, screenHeight);
     }
 
@@ -38,6 +44,9 @@ public class ImageContext {
      * @param strategy An ImageStrategy.
      */
     public void setImageStrategy(ImageStrategy strategy) {
+        if(strategy == null)
+            throw new NullPointerException();
+
         imageStrategy = strategy;
     }
 

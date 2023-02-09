@@ -21,26 +21,18 @@ public class BlackImageProviderTest {
         BufferedImage underTest1 = new BlackImageProvider(1920, 1080).provideImage();
         BufferedImage underTest2 = new BlackImageProvider(1920, 1080).provideImage();
 
-        Assert.assertEquals(underTest1.getRGB(0,0), underTest2.getRGB(0,0));
-        Assert.assertEquals(underTest1.getColorModel(), underTest2.getColorModel());
-        Assert.assertEquals(underTest1.getAlphaRaster(), underTest2.getAlphaRaster());
-
-
-        BufferedImage underTest3 = new BlackImageProvider(1920, 1080).provideImage();
-        BufferedImage underTest4 = new BlackImageProvider(3840, 2160).provideImage();
-
-        Assert.assertEquals(underTest3.getRGB(0,0), underTest4.getRGB(0,0));
-        Assert.assertEquals(underTest3.getColorModel(), underTest4.getColorModel());
-        Assert.assertEquals(underTest3.getAlphaRaster(), underTest4.getAlphaRaster());
+        Assert.assertTrue(ImageEqualityTestHelper.compareBufferedImages(underTest1, underTest2));
     }
 
     @Test
     public void testInstancesNotEquals() {
         BufferedImage underTest1 = new BlackImageProvider(1920, 1080).provideImage();
         BufferedImage underTest2 = new BlackImageProvider(3840, 2160).provideImage();
+        BufferedImage underTest3 = new BlackImageProvider(1920, 2160).provideImage();
+        BufferedImage underTest4 = new BlackImageProvider(3840, 1080).provideImage();
 
-        Assert.assertNotEquals(underTest1.getHeight(), underTest2.getHeight());
-        Assert.assertNotEquals(underTest1.getWidth(), underTest2.getWidth());
+        Assert.assertFalse(ImageEqualityTestHelper.compareBufferedImages(underTest1, underTest2));
+        Assert.assertFalse(ImageEqualityTestHelper.compareBufferedImages(underTest3, underTest4));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -51,6 +43,21 @@ public class BlackImageProviderTest {
     @Test(expected = IllegalArgumentException.class)
     public void testConstructorFail2() {
         new BlackImageProvider(-1, -1);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testConstructorFail3() {
+        new BlackImageProvider(-1, 1);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testConstructorFail4() {
+        new BlackImageProvider(1, -1);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testConstructorFail5() {
+        new BlackImageProvider(0, 1);
     }
 
     @Test

@@ -8,6 +8,7 @@ import de.livecc.display.background.ImageContext;
 import de.livecc.display.background.ImageStrategy;
 import de.livecc.display.background.WhiteImageProvider;
 
+import javax.annotation.Nonnull;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -57,10 +58,29 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
      * @param publisher TranscriptionPublisher that provides new subtitles to display.
      */
     public SubtitleDrawer(TranscriptionPublisher publisher) {
+        if(publisher == null)
+            throw new NullPointerException();
+
         transcriptionPublisher = publisher;
         setupGraphics();
     }
 
+    /**
+     * Sets up the Java Swing components that will display the subtitles and background.
+     *
+     * The architecture is as follows:
+     *
+     * |__________|__________|__________|__________|
+     * |          |          |##########|##########|
+     * |          |          |##########|##########|
+     * |          |          |          |          |
+     * |JFrame    |Background|Subtitle- |Upperblock|
+     * |          |Panel     |Panel     |__________|
+     * |          |          |          |          |
+     * |          |          |          |Lowerblock|
+     * |__________|__________|__________|__________|
+     *
+     */
     private void setupGraphics() {
 
         jFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -131,6 +151,9 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
     @Override
     public void receive(StreamingRecognitionResult transcription) {
 
+        if(transcription == null)
+            throw new NullPointerException();
+
         String transcriptionString = transcription.getAlternatives(0).getTranscript();
         boolean isFinal = transcription.getIsFinal();
 
@@ -152,6 +175,21 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
 
     }
 
+    /**
+     * The subtitles are shown in two lines and can be read top down.
+     * First the upper line will be drawn and then the lower line.
+     * If the lower line is full, it changes place with the upper line and a new lower line is forming.
+     * <p>
+     * For that the algorithm has to remember which part of the large input string is the upper line.
+     * This is achieved by storing the upper line in the match variable. In the next iteration
+     * the input string is divided in two strings. One left and one right of the matched string.
+     * Since the right site is the more recent transcription, it is used to form the lower line.
+     * <p>
+     * The function is called recursively and starts at index 0 of the string. Its goal is to fit
+     * the last char into the lower list. Then the recursion ends.
+     *
+     * @param subtitles A large String that contains at least 2*screenwidth pixels of content.
+     */
     private void makeSubtitleBoxes(String subtitles) {
 
         String[] toDisplayList = subtitles.split(matchingBlock);
@@ -174,6 +212,13 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
 
     }
 
+    /**
+     * Builds a sublist which length is limited by the screen width.
+     * The sublist starts at index 0 of the input string.
+     *
+     * @param input_string A String.
+     * @return Left part of the input string with limited length.
+     */
     private String buildSublist(String input_string) {
 
         String block = "";

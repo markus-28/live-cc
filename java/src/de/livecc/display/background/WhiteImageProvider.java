@@ -14,6 +14,8 @@ public class WhiteImageProvider implements ImageStrategy {
     private BufferedImage whiteImage;
 
     public WhiteImageProvider(int screenWidth, int screenHeight) {
+        if(screenWidth < 0 || screenHeight < 0)
+            throw new IllegalArgumentException();
 
         whiteImage = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_RGB);
         Graphics g = whiteImage.createGraphics();

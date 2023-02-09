@@ -14,6 +14,8 @@ public class BlackImageProvider implements ImageStrategy {
     private final BufferedImage blackImage;
 
     public BlackImageProvider(int screenWidth, int screenHeight) {
+        if(screenWidth <= 0 || screenHeight <= 0)
+            throw new IllegalArgumentException();
 
         blackImage = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_RGB);
         Graphics g = blackImage.createGraphics();
