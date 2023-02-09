@@ -1,5 +1,4 @@
 # live-cc
-
 Live-CC generates live subtitles from a microphone input using the Google Cloud Speech API and overlays them on top of an image. That image is usually a frame of any video-like input or just a static background. That image is then projected onto a Window.
 
 This particular project is a spinoff of another project I worked on. It functions as a playground for myself to enhance my programming skills and optimize the original solution.
