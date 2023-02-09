@@ -1,4 +1,4 @@
-package de.livecc.videoprovider;
+package de.livecc.display.background;
 
 import java.awt.image.BufferedImage;
 

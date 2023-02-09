@@ -1,40 +1,54 @@
-package de.livecc;
+package de.livecc.display;
 
 import com.google.cloud.speech.v1.StreamingRecognitionResult;
-import de.livecc.videoprovider.BlackImageProvider;
-import de.livecc.videoprovider.ImageContext;
-import de.livecc.videoprovider.ImageStrategy;
-import de.livecc.videoprovider.WhiteImageProvider;
+import de.livecc.TranscriptionPublisher;
+import de.livecc.TranscriptionSubscriber;
+import de.livecc.display.background.BlackImageProvider;
+import de.livecc.display.background.ImageContext;
+import de.livecc.display.background.ImageStrategy;
+import de.livecc.display.background.WhiteImageProvider;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 
 /**
- * A SubtitleDrawer draws subtitles received by a publisher to a given Image/Video.
+ * Opens a Fullscreen JFrame Window that displays subtitles.
+ * The background of the window can be altered. For that, different ImageStrategy implementations
+ * provide Images that then can be displayed by the SubtitleDrawer.
+ * <p>
+ * The subtitles are provided by receiving messages from a TranscriptionPublisher.
+ * For that, SubtitleDrawer implements the TranscriptionSubscriber interface.
+ * After subscribing, the TranscriptionPublisher will forward messages to SubtitleDrawer.
  */
 public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
 
-    private static final int MAX_CAPACITY = 500;
+    private static final int SUBTITLE_STORAGE_MAX_CAPACITY = 500;
     private static final Dimension SCREEN_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
+    private static final Color SUBTITLE_COLOR = Color.RED;
+    private static final Font SUBTITLE_FONT = new Font("Arial", Font.PLAIN, 34);
 
-    private JFrame jFrame;
-
-    private ImageJPanel backgroundPanel;
-
+    private final JFrame jFrame = new JFrame("window");;
+    private ImagePanel backgroundPanel;
     private JLabel textBlockLower;
     private JLabel textBlockUpper;
 
-    private final Font font = new Font("Arial", Font.PLAIN, 30);
     private FontMetrics fontMetrics;
 
-    private final TranscriptionPublisher transcriptionPublisher;
-
     private String mostRecentSubtitleStorage = "";
-
-    private String match = "\n";
+    private String matchingBlock = "\n";
     private String upperSubtitleBlock = "";
     private String lowerSubtitleBlock = "";
+
+    private final TranscriptionPublisher transcriptionPublisher;
 
     public SubtitleDrawer(TranscriptionPublisher publisher) {
         transcriptionPublisher = publisher;
@@ -43,26 +57,21 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
 
     private void setupGraphics() {
 
-        jFrame = new JFrame("window");
         jFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         jFrame.setUndecorated(true);
         jFrame.setVisible(true);
 
-        fontMetrics = jFrame.getGraphics().getFontMetrics(font);
+        fontMetrics = jFrame.getGraphics().getFontMetrics(SUBTITLE_FONT);
         Dimension preferredJLabelSize = new Dimension(SCREEN_SIZE.width, fontMetrics.getHeight());
 
         textBlockUpper = new JLabel(upperSubtitleBlock);
-        textBlockUpper.setLayout(null);
-        textBlockUpper.setVisible(true);
-        textBlockUpper.setFont(font);
-        textBlockUpper.setOpaque(false);
+        textBlockUpper.setFont(SUBTITLE_FONT);
+        textBlockUpper.setForeground(SUBTITLE_COLOR);
         textBlockUpper.setPreferredSize(preferredJLabelSize);
 
         textBlockLower = new JLabel(lowerSubtitleBlock);
-        textBlockLower.setLayout(null);
-        textBlockLower.setVisible(true);
-        textBlockLower.setFont(font);
-        textBlockLower.setOpaque(false);
+        textBlockLower.setFont(SUBTITLE_FONT);
+        textBlockLower.setForeground(SUBTITLE_COLOR);
         textBlockLower.setPreferredSize(preferredJLabelSize);
 
         JPanel subtitlePanel = new JPanel();
@@ -71,7 +80,7 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
         subtitlePanel.add(textBlockUpper);
         subtitlePanel.add(textBlockLower);
 
-        backgroundPanel = new ImageJPanel(new BorderLayout());
+        backgroundPanel = new ImagePanel(new BorderLayout());
         backgroundPanel.setBackground(Color.GREEN);
         backgroundPanel.add(subtitlePanel, BorderLayout.SOUTH);
 
@@ -94,6 +103,7 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
 
         while(true) {
             BufferedImage image = imageContext.executeStrategy();
+
             backgroundPanel.drawImage(image);
 
             if(currentStrategy instanceof WhiteImageProvider)
@@ -104,7 +114,7 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
             imageContext.setImageStrategy(currentStrategy);
 
             try {
-                Thread.sleep(1000);
+                Thread.sleep(500);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -124,8 +134,8 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
             mostRecentSubtitleStorage = mostRecentSubtitleStorage + transcriptionString;
 
             int storageLength = mostRecentSubtitleStorage.length();
-            if(storageLength > MAX_CAPACITY) {
-                mostRecentSubtitleStorage = mostRecentSubtitleStorage.substring(storageLength - MAX_CAPACITY);
+            if(storageLength > SUBTITLE_STORAGE_MAX_CAPACITY) {
+                mostRecentSubtitleStorage = mostRecentSubtitleStorage.substring(storageLength - SUBTITLE_STORAGE_MAX_CAPACITY);
             }
 
             subtitlesToDraw = mostRecentSubtitleStorage;
@@ -138,7 +148,7 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
 
     private void makeSubtitleBoxes(String subtitles) {
 
-        String[] toDisplayList = subtitles.split(match);
+        String[] toDisplayList = subtitles.split(matchingBlock);
         String toDisplay = toDisplayList[toDisplayList.length - 1];
 
         upperSubtitleBlock = buildSublist(toDisplay);
@@ -152,7 +162,7 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
         }
 
         if (!toDisplay.equals("")) {
-            match = upperSubtitleBlock;
+            matchingBlock = upperSubtitleBlock;
             makeSubtitleBoxes(subtitles);
         }
 

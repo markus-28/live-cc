@@ -1,7 +1,8 @@
 package de.livecc;
 
-import de.livecc.contentprovider.TextGenerator;
-import de.livecc.contentprovider.MicrophoneStream;
+import de.livecc.display.SubtitleDrawer;
+import de.livecc.transcription.TextGenerator;
+import de.livecc.transcription.MicrophoneStream;
 
 public class Main {
 

@@ -1,4 +1,4 @@
-package de.livecc.contentprovider;
+package de.livecc.transcription;
 
 import com.google.api.gax.rpc.ClientStream;
 import com.google.api.gax.rpc.ResponseObserver;
