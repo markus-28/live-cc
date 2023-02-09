@@ -10,9 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Connects to a Microphone and opens an audio-stream.
- * The content of the stream is written to a safely accessible queue-buffer.
- * Implements the Runnable Interface, because the class is blocking and should be called
- * from within a separate Thread.
+ * The content of the stream is written to a queue-buffer.
  */
 public class MicrophoneStream implements Runnable {
 

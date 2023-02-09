@@ -8,6 +8,7 @@ import de.livecc.display.background.ImageContext;
 import de.livecc.display.background.ImageStrategy;
 import de.livecc.display.background.WhiteImageProvider;
 
+import javax.annotation.Nonnull;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -17,6 +18,9 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.LayoutManager;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 
@@ -36,25 +40,47 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
     private static final Color SUBTITLE_COLOR = Color.RED;
     private static final Font SUBTITLE_FONT = new Font("Arial", Font.PLAIN, 34);
 
-    private final JFrame jFrame = new JFrame("window");;
+    private final JFrame jFrame = new JFrame("window");
+    private final TranscriptionPublisher transcriptionPublisher;
     private ImagePanel backgroundPanel;
     private JLabel textBlockLower;
     private JLabel textBlockUpper;
-
     private FontMetrics fontMetrics;
-
     private String mostRecentSubtitleStorage = "";
     private String matchingBlock = "\n";
     private String upperSubtitleBlock = "";
     private String lowerSubtitleBlock = "";
 
-    private final TranscriptionPublisher transcriptionPublisher;
-
+    /**
+     * Creates a new instance of SubtitleDrawer. New subtitles are gathered by subscribing to the
+     * given TranscriptionPublisher.
+     *
+     * @param publisher TranscriptionPublisher that provides new subtitles to display.
+     */
     public SubtitleDrawer(TranscriptionPublisher publisher) {
+        if(publisher == null)
+            throw new NullPointerException();
+
         transcriptionPublisher = publisher;
         setupGraphics();
     }
 
+    /**
+     * Sets up the Java Swing components that will display the subtitles and background.
+     *
+     * The architecture is as follows:
+     *
+     * |__________|__________|__________|__________|
+     * |          |          |##########|##########|
+     * |          |          |##########|##########|
+     * |          |          |          |          |
+     * |JFrame    |Background|Subtitle- |Upperblock|
+     * |          |Panel     |Panel     |__________|
+     * |          |          |          |          |
+     * |          |          |          |Lowerblock|
+     * |__________|__________|__________|__________|
+     *
+     */
     private void setupGraphics() {
 
         jFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -125,6 +151,9 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
     @Override
     public void receive(StreamingRecognitionResult transcription) {
 
+        if(transcription == null)
+            throw new NullPointerException();
+
         String transcriptionString = transcription.getAlternatives(0).getTranscript();
         boolean isFinal = transcription.getIsFinal();
 
@@ -146,6 +175,21 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
 
     }
 
+    /**
+     * The subtitles are shown in two lines and can be read top down.
+     * First the upper line will be drawn and then the lower line.
+     * If the lower line is full, it changes place with the upper line and a new lower line is forming.
+     * <p>
+     * For that the algorithm has to remember which part of the large input string is the upper line.
+     * This is achieved by storing the upper line in the match variable. In the next iteration
+     * the input string is divided in two strings. One left and one right of the matched string.
+     * Since the right site is the more recent transcription, it is used to form the lower line.
+     * <p>
+     * The function is called recursively and starts at index 0 of the string. Its goal is to fit
+     * the last char into the lower list. Then the recursion ends.
+     *
+     * @param subtitles A large String that contains at least 2*screenwidth pixels of content.
+     */
     private void makeSubtitleBoxes(String subtitles) {
 
         String[] toDisplayList = subtitles.split(matchingBlock);
@@ -168,6 +212,13 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
 
     }
 
+    /**
+     * Builds a sublist which length is limited by the screen width.
+     * The sublist starts at index 0 of the input string.
+     *
+     * @param input_string A String.
+     * @return Left part of the input string with limited length.
+     */
     private String buildSublist(String input_string) {
 
         String block = "";
@@ -190,5 +241,39 @@ public class SubtitleDrawer implements TranscriptionSubscriber, Runnable {
         lowerSubtitleBlock = lowerSubtitleBlock.strip();
         textBlockUpper.setText(upperSubtitleBlock);
         textBlockLower.setText(lowerSubtitleBlock);
+    }
+
+    /**
+     * Overrides JPanel in order to be able to change a background image.
+     */
+    private static class ImagePanel extends JPanel {
+
+        private Image currentImage;
+
+        /**
+         * Create a new buffered ImagePanel with the specified layout manager.
+         *
+         * @param layoutManager A layout manager.
+         */
+        public ImagePanel(LayoutManager layoutManager) {
+            super(layoutManager);
+        }
+
+        /**
+         * Sets the given image as background.
+         * Repainting the Panel changes the background by calling the overridden paintComponent Method.
+         *
+         * @param image an Image.
+         */
+        public void drawImage(Image image) {
+            currentImage = image;
+            repaint();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            g.drawImage(currentImage, 0, 0, SubtitleDrawer.SCREEN_SIZE.width, SubtitleDrawer.SCREEN_SIZE.height, null);
+        }
     }
 }
