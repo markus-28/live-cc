@@ -1,4 +1,4 @@
-package de.livecc.contentprovider;
+package de.livecc.transcription;
 
 import com.google.cloud.speech.v1.SpeechRecognitionAlternative;
 import com.google.cloud.speech.v1.StreamingRecognitionResult;
